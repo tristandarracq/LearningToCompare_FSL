@@ -18,6 +18,9 @@ import math
 import argparse
 import random
 
+from torch.utils.tensorboard import SummaryWriter
+tensorboard = SummaryWriter()
+
 parser = argparse.ArgumentParser(description="One Shot Visual Recognition")
 parser.add_argument("-f","--feature_dim",type = int, default = 64)
 parser.add_argument("-r","--relation_dim",type = int, default = 8)
@@ -203,7 +206,9 @@ def main():
         relation_network_optim.step()
 
         if (episode+1)%100 == 0:
-                print("episode:",episode+1,"loss",loss.data[0])
+                print("episode:",episode+1,"loss",loss.data.item())
+                tensorboard.add_scalar("Train Loss", loss.data.item(), episode+1)
+                tensorboard.add_scalar("Train Accuracy", total_rewards/1.0/CLASS_NUM/SAMPLE_NUM_PER_CLASS/EPISODE, episode+1)
 
         if (episode+1)%5000 == 0:
 
@@ -241,6 +246,7 @@ def main():
                 rewards = [1 if predict_labels[j]==test_labels[j] else 0 for j in range(CLASS_NUM*SAMPLE_NUM_PER_CLASS)]
 
                 total_rewards += np.sum(rewards)
+                tensorboard.add_scalar("Validation Accuracy", total_rewards/1.0/CLASS_NUM/SAMPLE_NUM_PER_CLASS/TEST_EPISODE, i+1)
 
             test_accuracy = total_rewards/1.0/CLASS_NUM/SAMPLE_NUM_PER_CLASS/TEST_EPISODE
 
